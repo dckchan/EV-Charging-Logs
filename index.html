@@ -178,7 +178,7 @@ function makeAreaChart(data,w,h){if(!w)w=500;if(!h)h=180;if(!data.length)return'
 function makePieChart(data,size){if(!size)size=200;if(!data.length)return'<div class="empty">No data</div>';var total=0;data.forEach(function(d){total+=d.v});if(total===0)return'<div class="empty">No data</div>';var cx=size/2,cy=size/2,r=size/2-10;var svg='<svg viewBox="0 0 '+size+' '+size+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:'+size+'px;height:auto;margin:0 auto;display:block">';var angle=-Math.PI/2;data.forEach(function(d,i){var pct=d.v/total;var a1=angle;var a2=angle+pct*2*Math.PI;var lg=pct>.5?1:0;var x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1);var x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);svg+='<path d="M'+cx+','+cy+' L'+fmt(x1,2)+','+fmt(y1,2)+' A'+r+','+r+' 0 '+lg+' 1 '+fmt(x2,2)+','+fmt(y2,2)+' Z" fill="'+COLORS[i%COLORS.length]+'" opacity=".85"/>';if(pct>.06){var mid=a1+pct*Math.PI;svg+='<text x="'+fmt(cx+(r*.65)*Math.cos(mid),1)+'" y="'+fmt(cy+(r*.65)*Math.sin(mid),1)+'" fill="#fff" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">'+Math.round(pct*100)+'%</text>'}angle=a2});svg+='</svg>';var legend='<div style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;justify-content:center">';data.forEach(function(d,i){legend+='<div style="display:flex;align-items:center;gap:4px;font-size:11px"><span style="width:8px;height:8px;border-radius:2px;background:'+COLORS[i%COLORS.length]+';flex-shrink:0"></span><span style="color:var(--txd)">'+escH(d.l)+'</span><span style="font-weight:600;font-variant-numeric:tabular-nums">'+fC(d.v)+'</span></div>'});legend+='</div>';return svg+legend}
 
 // Page Renderers
-function render(){var app=document.getElementById('app');var h=buildHeader()+buildNav();if(currentTab==='dashboard')h+=buildDashboard();else if(currentTab==='sessions')h+=buildSessions();else if(currentTab==='analysis')h+=buildAnalysis();app.innerHTML=h;attachEvents()}
+function render(){var app=document.getElementById('app');var h=buildHeader()+buildNav();if(currentTab==='dashboard')h+=buildDashboard();else if(currentTab==='sessions')h+=buildSessions();else if(currentTab==='analysis')h+=buildAnalysis();app.innerHTML=h}
 
 function buildHeader(){
   return '<header class="hdr"><div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#0b1120" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div><div class="logo-txt">ChargeLog</div><div class="logo-sub">Vancouver &middot; Richmond</div></div></div><div class="hdr-actions"><button class="btn btn-g" data-act="battery">\uD83D\uDD0B '+batteryCap+' kWh</button><button class="btn btn-g" data-act="budget">\u2295 Budget'+(budget>0?' $'+fmt(budget,0):'')+'</button>'+(sessions.length===0?'<button class="btn btn-g" data-act="sample">Load Sample</button>':'')+'<button class="btn btn-p btn-round" data-act="add" title="Add Session">+</button></div></header><div class="credit">Produced by D. Chan in 2026</div>';
@@ -364,7 +364,7 @@ function syncForm(){
 function attachFormEvts(){
   var overlay=document.getElementById('form-overlay');
   var modal=document.getElementById('form-modal');
-  overlay.addEventListener('mousedown',function(e){if(e.target===overlay)closeFormModal()});
+  overlay.addEventListener('click',function(e){if(e.target===overlay)closeFormModal()});
   document.getElementById('form-close').addEventListener('click',closeFormModal);
   document.getElementById('form-cancel').addEventListener('click',closeFormModal);
   document.getElementById('form-save').addEventListener('click',handleFormSave);
@@ -429,23 +429,23 @@ function handleFormSave(){
 
 // ═══ BATTERY CAPACITY MODAL ═══
 function openBatteryModal(){
+  closeBattM();
   var h='<div class="modal-bg" id="batt-overlay"><div class="modal" style="max-width:380px" id="batt-modal"><h2 style="font-size:15px;margin-bottom:12px">\uD83D\uDD0B EV Battery Capacity</h2><label class="lbl">Battery Capacity (kWh)</label><input type="number" step="1" class="inp" id="batt-val" value="'+batteryCap+'" placeholder="e.g., 60"><div style="font-size:11px;color:var(--txd);margin-top:6px">Common: Tesla Model 3 (60-82), Leaf (40-62), ID.4 (77), Ioniq 5 (77), Kona (64)</div><div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end"><button class="btn btn-g" id="batt-cancel">Cancel</button><button class="btn btn-p" id="batt-save">Save</button></div></div></div>';
   var c=document.createElement('div');c.id='batt-root';c.innerHTML=h;document.body.appendChild(c);
-  document.getElementById('batt-overlay').addEventListener('mousedown',function(e){if(e.target===this)closeBattM()});
-  document.getElementById('batt-modal').addEventListener('mousedown',function(e){e.stopPropagation()});
-  document.getElementById('batt-cancel').addEventListener('click',closeBattM);
-  document.getElementById('batt-save').addEventListener('click',function(){batteryCap=parseFloat(document.getElementById('batt-val').value)||60;saveData();closeBattM();render()});
+  document.getElementById('batt-overlay').addEventListener('click',function(e){if(e.target.id==='batt-overlay')closeBattM()});
+  document.getElementById('batt-cancel').addEventListener('click',function(e){e.stopPropagation();closeBattM()});
+  document.getElementById('batt-save').addEventListener('click',function(e){e.stopPropagation();batteryCap=parseFloat(document.getElementById('batt-val').value)||60;saveData();closeBattM();render()});
 }
 function closeBattM(){var r=document.getElementById('batt-root');if(r)r.remove()}
 
 // ═══ BUDGET MODAL (FIXED) ═══
 function openBudgetModal(){
+  closeBudgetM();
   var h='<div class="modal-bg" id="budget-overlay"><div class="modal" style="max-width:380px" id="budget-modal"><h2 style="font-size:15px;margin-bottom:12px">\u2295 Monthly Budget</h2><label class="lbl">Budget Amount ($)</label><input type="number" step="1" class="inp" id="b-val" value="'+(budget||'')+'" placeholder="e.g., 100"><div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end"><button class="btn btn-g" id="budget-cancel">Cancel</button><button class="btn btn-p" id="budget-save">Save</button></div></div></div>';
   var c=document.createElement('div');c.id='budget-root';c.innerHTML=h;document.body.appendChild(c);
-  document.getElementById('budget-overlay').addEventListener('mousedown',function(e){if(e.target===this)closeBudgetM()});
-  document.getElementById('budget-modal').addEventListener('mousedown',function(e){e.stopPropagation()});
-  document.getElementById('budget-cancel').addEventListener('click',closeBudgetM);
-  document.getElementById('budget-save').addEventListener('click',function(){budget=parseFloat(document.getElementById('b-val').value)||0;saveData();closeBudgetM();render()});
+  document.getElementById('budget-overlay').addEventListener('click',function(e){if(e.target.id==='budget-overlay')closeBudgetM()});
+  document.getElementById('budget-cancel').addEventListener('click',function(e){e.stopPropagation();closeBudgetM()});
+  document.getElementById('budget-save').addEventListener('click',function(e){e.stopPropagation();budget=parseFloat(document.getElementById('b-val').value)||0;saveData();closeBudgetM();render()});
 }
 function closeBudgetM(){var r=document.getElementById('budget-root');if(r)r.remove()}
 
@@ -473,8 +473,8 @@ function loadSample(){
   ];saveData();
 }
 
-// Event Binding
-function attachEvents(){
+// Event Binding - one-time delegation on #app
+function attachGlobalEvents(){
   document.getElementById('app').addEventListener('click',function(e){
     if(e.target.closest('a'))return;
     var btn=e.target.closest('[data-act]');
@@ -490,11 +490,15 @@ function attachEvents(){
     var tabBtn=e.target.closest('[data-tab]');
     if(tabBtn){currentTab=tabBtn.getAttribute('data-tab');render()}
   });
-  document.querySelectorAll('[data-flt]').forEach(function(sel){sel.addEventListener('change',function(){var key=this.getAttribute('data-flt');if(key==='provider')filterProvider=this.value;else if(key==='location')filterLocation=this.value;else if(key==='type')filterType=this.value;render()})});
-  var msel=document.querySelector('[data-act="selmonth"]');if(msel)msel.addEventListener('change',function(){selectedMonth=this.value;render()});
+  document.getElementById('app').addEventListener('change',function(e){
+    var flt=e.target.closest('[data-flt]');
+    if(flt){var key=flt.getAttribute('data-flt');if(key==='provider')filterProvider=flt.value;else if(key==='location')filterLocation=flt.value;else if(key==='type')filterType=flt.value;render();return}
+    var msel=e.target.closest('[data-act="selmonth"]');
+    if(msel){selectedMonth=msel.value;render()}
+  });
 }
 
-loadData();render();
+loadData();attachGlobalEvents();render();
 })();
 </script>
 </body>
