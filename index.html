@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1">
+<title>EV ChargeLog — Vancouver &amp; Richmond</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0b1120;--sf:#131c2e;--sf2:#1a2540;--sf3:#243052;
+  --bd:#2a3658;--tx:#e0e7f1;--txd:#8494b2;--txm:#5a6a88;
+  --ac:#22d3ee;--acg:rgba(34,211,238,.12);
+  --gn:#34d399;--gng:rgba(52,211,153,.12);
+  --am:#fbbf24;--amg:rgba(251,191,36,.12);
+  --rd:#f87171;--rdg:rgba(248,113,113,.12);
+  --r:12px;--rs:8px;
+}
+html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+.app{max-width:1100px;margin:0 auto;padding:12px 16px 80px}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 0 4px;flex-wrap:wrap;gap:10px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#22d3ee,#06b6d4);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(34,211,238,.3)}
+.logo-icon svg{width:22px;height:22px}
+.logo-txt{font-size:22px;font-weight:800;background:linear-gradient(135deg,#22d3ee,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-sub{font-size:11px;color:var(--txd);letter-spacing:1px;text-transform:uppercase}
+.credit{font-size:10px;color:var(--txm);text-align:center;padding:2px 0 10px;letter-spacing:.5px}
+.hdr-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.nav{display:flex;gap:3px;background:var(--sf);border-radius:10px;padding:3px;border:1px solid var(--bd);margin-bottom:16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.nav-btn{padding:8px 14px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;background:transparent;color:var(--txd);transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.nav-btn.act{background:var(--ac);color:#0b1120}.nav-btn:hover:not(.act){background:var(--sf2)}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.card-title{font-size:12px;font-weight:700;color:var(--txd);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.stat-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.stat{background:var(--sf2);border-radius:var(--rs);padding:14px;border:1px solid var(--bd)}
+.stat.glow-ac{box-shadow:inset 0 0 28px var(--acg)}.stat.glow-gn{box-shadow:inset 0 0 28px var(--gng)}
+.stat-val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;margin-bottom:2px}
+.stat-lbl{font-size:11px;color:var(--txd)}
+.btn{padding:9px 16px;border-radius:var(--rs);border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn-p{background:linear-gradient(135deg,#22d3ee,#06b6d4);color:#0b1120;box-shadow:0 3px 14px rgba(34,211,238,.25)}.btn-p:hover{box-shadow:0 3px 20px rgba(34,211,238,.4)}
+.btn-g{background:var(--sf2);color:var(--tx);border:1px solid var(--bd)}.btn-g:hover{background:var(--sf3)}
+.btn-s{padding:6px 12px;font-size:11px;border-radius:6px;background:var(--sf3);color:var(--txd);border:1px solid var(--bd);cursor:pointer;font-family:inherit;font-weight:600;transition:all .15s}
+.btn-s:hover{background:var(--ac);color:#0b1120;border-color:var(--ac)}.btn-s.active{background:var(--ac);color:#0b1120;border-color:var(--ac)}
+.btn-round{width:38px;height:38px;padding:0;justify-content:center;border-radius:50%}
+.inp{width:100%;padding:9px 12px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx);font-size:14px;font-family:inherit;outline:none;transition:border .2s}
+.inp:focus{border-color:var(--ac)}.inp.err{border-color:var(--rd)!important}
+.sel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238494b2' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.lbl{font-size:11px;font-weight:600;color:var(--txd);margin-bottom:5px;display:block}
+.fgrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.fgrid .full{grid-column:1/-1}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.3px}
+.badge-ac{background:var(--acg);color:var(--ac)}.badge-gn{background:var(--gng);color:var(--gn)}.badge-am{background:var(--amg);color:var(--am)}.badge-rd{background:var(--rdg);color:var(--rd)}
+.alert-box{padding:10px 14px;border-radius:var(--rs);margin-bottom:6px;display:flex;align-items:flex-start;gap:8px;font-size:12px}
+.alert-warn{background:var(--amg);border:1px solid rgba(251,191,36,.25);color:var(--am)}.alert-err{background:var(--rdg);border:1px solid rgba(248,113,113,.25);color:var(--rd)}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:8px 8px;text-align:left;border-bottom:2px solid var(--bd);font-size:9px;font-weight:700;color:var(--txd);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+td{padding:8px 8px;border-bottom:1px solid var(--bd);font-variant-numeric:tabular-nums;font-size:11px}
+tr:hover td{background:rgba(34,211,238,.03)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:flex-start;justify-content:center;z-index:1000;padding:16px;backdrop-filter:blur(3px);overflow-y:auto}
+.modal{background:var(--sf);border-radius:var(--r);padding:20px;max-width:620px;width:100%;border:1px solid var(--bd);box-shadow:0 20px 60px rgba(0,0,0,.5);margin:20px auto}
+.modal h2{font-size:17px;font-weight:700;margin-bottom:16px}
+.progress-bar{height:7px;background:var(--sf3);border-radius:4px;overflow:hidden}.progress-fill{height:100%;border-radius:4px;transition:width .4s}
+.insight-row{display:flex;align-items:center;gap:9px;padding:8px 0;font-size:12px;border-bottom:1px solid var(--bd)}.insight-row:last-child{border-bottom:none}
+.split-row{display:flex;gap:14px;flex-wrap:wrap}.split-row>div{flex:1;min-width:130px}
+.rank-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd)}.rank-item:last-child{border-bottom:none}
+.rank-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:var(--sf3);color:var(--txd);border:1px solid var(--bd);flex-shrink:0}
+.rank-num.top{background:var(--gng);color:var(--gn);border-color:var(--gn)}
+.loc-card{padding:12px;background:var(--sf2);border-radius:8px}.loc-card h4{font-size:13px;font-weight:600;margin-bottom:6px}
+.tips-box{margin-top:14px;padding:12px;background:var(--sf2);border-radius:8px;font-size:11px;color:var(--txd);line-height:1.7}.tips-box strong{color:var(--tx)}
+.icon-btn{background:none;border:none;cursor:pointer;padding:3px;color:var(--txd);transition:color .15s;font-size:14px}.icon-btn:hover{color:var(--tx)}.icon-btn.del:hover{color:var(--rd)}
+.empty{text-align:center;color:var(--txm);padding:50px 20px;font-size:13px}
+.gas-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.gas-card{padding:12px;background:var(--sf2);border-radius:8px;text-align:center}.gas-card .val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:4px}
+.gas-note{margin-top:6px;font-size:10px;color:var(--txm);text-align:center}
+.rate-preview{margin-top:10px;padding:10px;background:var(--sf2);border-radius:8px;font-size:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* Calendar collapsible */
+.cal-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:8px;user-select:none}
+.cal-toggle:hover{border-color:var(--ac)}
+.cal-toggle .sel-date{font-size:13px;font-weight:600;color:var(--ac)}
+.cal-toggle .arrow{font-size:12px;color:var(--txd);transition:transform .2s}
+.cal-toggle .arrow.open{transform:rotate(180deg)}
+.cal-body{overflow:hidden;transition:max-height .3s ease}
+.cal-body.collapsed{max-height:0!important;overflow:hidden}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cal-title{font-size:13px;font-weight:700;color:var(--tx)}
+.cal-nav{display:flex;gap:3px}
+.cal-nav button{width:28px;height:28px;border-radius:7px;border:1px solid var(--bd);background:var(--sf2);color:var(--txd);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.cal-nav button:hover{background:var(--ac);color:#0b1120;border-color:var(--ac)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-dow{font-size:9px;font-weight:700;color:var(--txm);text-align:center;padding:3px 0;text-transform:uppercase}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;border:2px solid transparent;color:var(--txd);position:relative}
+.cal-day:hover{background:var(--sf3);color:var(--tx)}
+.cal-day.today{border-color:var(--ac);color:var(--ac)}.cal-day.selected{background:var(--ac);color:#0b1120;font-weight:700;border-color:var(--ac)}
+.cal-day.other{opacity:.25;cursor:default}.cal-day.other:hover{background:transparent}
+.cal-day.has-session::after{content:'';position:absolute;bottom:2px;width:4px;height:4px;border-radius:50%;background:var(--gn)}.cal-day.selected.has-session::after{background:#0b1120}
+/* Time direct input */
+.time-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.time-inp{width:70px;padding:8px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--ac);font-size:16px;font-weight:700;text-align:center;font-family:inherit;outline:none;font-variant-numeric:tabular-nums}
+.time-inp:focus{border-color:var(--ac)}
+.ampm-btn{padding:8px 14px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--txd);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+.ampm-btn.active{background:var(--ac);color:#0b1120;border-color:var(--ac)}
+/* Location */
+.loc-tabs{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}
+.coord-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gps-btn{padding:10px 16px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--sf2);color:var(--tx);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;width:100%;justify-content:center;transition:all .2s}
+.gps-btn:hover{border-color:var(--ac);background:var(--acg)}.gps-btn.loading{opacity:.6;pointer-events:none}
+.loc-status{font-size:11px;margin-top:6px;padding:6px 10px;border-radius:6px}.loc-status.ok{background:var(--gng);color:var(--gn)}.loc-status.err{background:var(--rdg);color:var(--rd)}
+.map-link{color:var(--ac);font-size:10px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;padding:2px 6px;background:var(--acg);border-radius:4px;margin-top:3px}
+.map-link:hover{text-decoration:underline;background:rgba(34,211,238,.22)}
+.batt-bar-bg{height:14px;background:var(--sf3);border-radius:7px;overflow:hidden;position:relative;margin-top:2px}
+.batt-bar-fill{height:100%;border-radius:7px;transition:width .3s}
+.batt-bar-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+@media(max-width:600px){.stat-grid{grid-template-columns:repeat(2,1fr)}.fgrid{grid-template-columns:1fr 1fr}.hdr{padding:10px 0 2px}.app{padding:10px 12px 80px}}
+@supports(padding-bottom:env(safe-area-inset-bottom)){.app{padding-bottom:calc(80px + env(safe-area-inset-bottom))}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+(function(){
+"use strict";
+var PROVIDERS=['BC Hydro','Flo','ChargePoint','Tesla Supercharger','Electrify Canada','Other'];
+var LOCATIONS=['Vancouver','Richmond'];
+var TYPES=['Level 2','DC Fast'];
+var BENCH={'Level 2':{lo:.25,hi:.30},'DC Fast':{lo:.35,hi:.45}};
+var COLORS=['#22d3ee','#34d399','#fbbf24','#a78bfa','#f87171','#fb923c'];
+var GAS_PER_L=1.85,GAS_L100=9.0,EV_KWH100=18.0;
+var SK='ev_sessions',BK='ev_budget',CK='ev_battery_cap';
+var DAYS=['Su','Mo','Tu','We','Th','Fr','Sa'];
+var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function fmt(n,d){if(d===undefined)d=2;return Number(n).toFixed(d)}
+function fC(n){return '$'+fmt(n)}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function getToday(){return new Date().toISOString().split('T')[0]}
+function getYM(d){return d.slice(0,7)}
+function pad2(n){return n<10?'0'+n:''+n}
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function gmapUrl(lat,lng,name){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(lat+','+lng)}
+
+var sessions=[],budget=0,batteryCap=60,currentTab='dashboard';
+var filterProvider='',filterLocation='',filterType='',selectedMonth='';
+
+function loadData(){
+  try{sessions=JSON.parse(localStorage.getItem(SK)||'[]')}catch(e){sessions=[]}
+  try{budget=+(localStorage.getItem(BK)||0)}catch(e){budget=0}
+  try{batteryCap=+(localStorage.getItem(CK)||60)}catch(e){batteryCap=60}
+  if(!batteryCap)batteryCap=60;
+  var now=new Date();selectedMonth=now.getFullYear()+'-'+pad2(now.getMonth()+1);
+}
+function saveData(){
+  try{localStorage.setItem(SK,JSON.stringify(sessions));localStorage.setItem(BK,String(budget));localStorage.setItem(CK,String(batteryCap))}catch(e){}
+}
+function getAlerts(s){
+  var a=[];
+  if(s.kwh>0){var r=s.cost/s.kwh;var b=BENCH[s.chargerType];if(r>b.hi*1.2)a.push({t:'err',m:'Cost/kWh ($'+fmt(r)+') exceeds expected range'})}
+  if(s.idleFees>0)a.push({t:'warn',m:'Idle fee of $'+fmt(s.idleFees)+' incurred'});
+  return a;
+}
+function getMonthSummary(ymStr){
+  var ms=sessions.filter(function(s){return getYM(s.date)===ymStr});
+  if(!ms.length)return null;
+  var tKwh=0,tCost=0,byP={},byL={},fCost=0,l2Cost=0;
+  ms.forEach(function(s){tKwh+=s.kwh;tCost+=s.cost+s.idleFees;
+    if(!byP[s.provider])byP[s.provider]={kwh:0,cost:0,n:0};byP[s.provider].kwh+=s.kwh;byP[s.provider].cost+=s.cost+s.idleFees;byP[s.provider].n++;
+    if(!byL[s.location])byL[s.location]={kwh:0,cost:0,n:0};byL[s.location].kwh+=s.kwh;byL[s.location].cost+=s.cost+s.idleFees;byL[s.location].n++;
+    if(s.chargerType==='DC Fast')fCost+=s.cost+s.idleFees;else l2Cost+=s.cost+s.idleFees;
+  });
+  var eqKm=(tKwh/EV_KWH100)*100;var eqGas=(eqKm/100)*GAS_L100*GAS_PER_L;
+  // average battery stats
+  var avgOrig=0,avgPct=0,cnt=0;
+  ms.forEach(function(s){if(s.battOrig!=null&&s.battPct!=null){avgOrig+=s.battOrig;avgPct+=s.battPct;cnt++}});
+  if(cnt){avgOrig/=cnt;avgPct/=cnt}
+  return{tKwh:tKwh,tCost:tCost,avg:tKwh>0?tCost/tKwh:0,byP:byP,byL:byL,fCost:fCost,l2Cost:l2Cost,eqGas:eqGas,savings:eqGas-tCost,sessions:ms,avgOrig:avgOrig,avgPct:avgPct,battCnt:cnt};
+}
+
+// SVG Charts
+function makeBarChart(data,w,h){if(!w)w=500;if(!h)h=180;if(!data.length)return'<div class="empty">No data</div>';var pad={t:10,r:10,b:28,l:42};var cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;var vals=data.map(function(d){return d.v});var maxV=Math.max.apply(null,vals)*1.15;if(!maxV||maxV<=0)maxV=1;var bw=Math.min(28,cw/data.length*.65);var gap=(cw-bw*data.length)/(data.length+1);var svg='<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">';for(var i=0;i<=4;i++){var y=pad.t+ch-ch*(i/4);svg+='<line x1="'+pad.l+'" y1="'+y+'" x2="'+(w-pad.r)+'" y2="'+y+'" stroke="#2a3658" stroke-dasharray="3,3"/><text x="'+(pad.l-6)+'" y="'+(y+3)+'" fill="#8494b2" font-size="9" text-anchor="end">'+fmt(maxV*(i/4),0)+'</text>'}data.forEach(function(d,i){var x=pad.l+gap+(bw+gap)*i;var bh=(d.v/maxV)*ch;var y2=pad.t+ch-bh;svg+='<rect x="'+x+'" y="'+y2+'" width="'+bw+'" height="'+bh+'" rx="3" fill="'+(d.c||'#22d3ee')+'" opacity=".85"/><text x="'+(x+bw/2)+'" y="'+(h-pad.b+14)+'" fill="#8494b2" font-size="9" text-anchor="middle">'+escH(d.l)+'</text>'});svg+='</svg>';return svg}
+function makeAreaChart(data,w,h){if(!w)w=500;if(!h)h=180;if(!data.length)return'<div class="empty">No data</div>';var pad={t:14,r:10,b:28,l:46};var cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;var vals=data.map(function(d){return d.v});var maxV=Math.max.apply(null,vals)*1.2;if(!maxV||maxV<=0)maxV=1;var pts=data.map(function(d,i){return{x:pad.l+(data.length>1?i/(data.length-1):.5)*cw,y:pad.t+ch-(d.v/maxV)*ch}});var svg='<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto"><defs><linearGradient id="ag1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#22d3ee" stop-opacity=".25"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/></linearGradient></defs>';for(var i=0;i<=4;i++){var y=pad.t+ch-ch*(i/4);svg+='<line x1="'+pad.l+'" y1="'+y+'" x2="'+(w-pad.r)+'" y2="'+y+'" stroke="#2a3658" stroke-dasharray="3,3"/><text x="'+(pad.l-6)+'" y="'+(y+3)+'" fill="#8494b2" font-size="9" text-anchor="end">$'+fmt(maxV*(i/4),0)+'</text>'}var pathD=pts.map(function(p,i){return(i===0?'M':'L')+fmt(p.x,1)+','+fmt(p.y,1)}).join(' ');svg+='<path d="'+pathD+' L'+fmt(pts[pts.length-1].x,1)+','+(pad.t+ch)+' L'+fmt(pts[0].x,1)+','+(pad.t+ch)+' Z" fill="url(#ag1)"/><path d="'+pathD+'" fill="none" stroke="#22d3ee" stroke-width="2"/>';pts.forEach(function(p){svg+='<circle cx="'+fmt(p.x,1)+'" cy="'+fmt(p.y,1)+'" r="3" fill="#22d3ee"/>'});data.forEach(function(d,i){var x=pad.l+(data.length>1?i/(data.length-1):.5)*cw;svg+='<text x="'+x+'" y="'+(h-pad.b+14)+'" fill="#8494b2" font-size="9" text-anchor="middle">'+escH(d.l)+'</text>'});svg+='</svg>';return svg}
+function makePieChart(data,size){if(!size)size=200;if(!data.length)return'<div class="empty">No data</div>';var total=0;data.forEach(function(d){total+=d.v});if(total===0)return'<div class="empty">No data</div>';var cx=size/2,cy=size/2,r=size/2-10;var svg='<svg viewBox="0 0 '+size+' '+size+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:'+size+'px;height:auto;margin:0 auto;display:block">';var angle=-Math.PI/2;data.forEach(function(d,i){var pct=d.v/total;var a1=angle;var a2=angle+pct*2*Math.PI;var lg=pct>.5?1:0;var x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1);var x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);svg+='<path d="M'+cx+','+cy+' L'+fmt(x1,2)+','+fmt(y1,2)+' A'+r+','+r+' 0 '+lg+' 1 '+fmt(x2,2)+','+fmt(y2,2)+' Z" fill="'+COLORS[i%COLORS.length]+'" opacity=".85"/>';if(pct>.06){var mid=a1+pct*Math.PI;svg+='<text x="'+fmt(cx+(r*.65)*Math.cos(mid),1)+'" y="'+fmt(cy+(r*.65)*Math.sin(mid),1)+'" fill="#fff" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">'+Math.round(pct*100)+'%</text>'}angle=a2});svg+='</svg>';var legend='<div style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;justify-content:center">';data.forEach(function(d,i){legend+='<div style="display:flex;align-items:center;gap:4px;font-size:11px"><span style="width:8px;height:8px;border-radius:2px;background:'+COLORS[i%COLORS.length]+';flex-shrink:0"></span><span style="color:var(--txd)">'+escH(d.l)+'</span><span style="font-weight:600;font-variant-numeric:tabular-nums">'+fC(d.v)+'</span></div>'});legend+='</div>';return svg+legend}
+
+// Page Renderers
+function render(){var app=document.getElementById('app');var h=buildHeader()+buildNav();if(currentTab==='dashboard')h+=buildDashboard();else if(currentTab==='sessions')h+=buildSessions();else if(currentTab==='analysis')h+=buildAnalysis();app.innerHTML=h;attachEvents()}
+
+function buildHeader(){
+  return '<header class="hdr"><div class="logo"><div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#0b1120" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div><div class="logo-txt">ChargeLog</div><div class="logo-sub">Vancouver &middot; Richmond</div></div></div><div class="hdr-actions"><button class="btn btn-g" data-act="battery">\uD83D\uDD0B '+batteryCap+' kWh</button><button class="btn btn-g" data-act="budget">\u2295 Budget'+(budget>0?' $'+fmt(budget,0):'')+'</button>'+(sessions.length===0?'<button class="btn btn-g" data-act="sample">Load Sample</button>':'')+'<button class="btn btn-p btn-round" data-act="add" title="Add Session">+</button></div></header><div class="credit">Produced by D. Chan in 2026</div>';
+}
+function buildNav(){var tabs=[{id:'dashboard',l:'\u25A6 Dashboard'},{id:'sessions',l:'\u2630 Sessions'},{id:'analysis',l:'\u25CE Analysis'}];var h='<nav class="nav">';tabs.forEach(function(t){h+='<button class="nav-btn'+(currentTab===t.id?' act':'')+'" data-tab="'+t.id+'">'+t.l+'</button>'});return h+'</nav>'}
+
+function buildDashboard(){
+  var now=new Date();var thisYM=now.getFullYear()+'-'+pad2(now.getMonth()+1);var ms=getMonthSummary(thisYM);var h='';
+  h+='<div class="stat-grid"><div class="stat glow-ac"><div class="stat-val" style="color:var(--ac)">'+(ms?fC(ms.tCost):'$0.00')+'</div><div class="stat-lbl">This Month Cost</div></div><div class="stat glow-gn"><div class="stat-val" style="color:var(--gn)">'+(ms?fmt(ms.tKwh,1):'0.0')+'</div><div class="stat-lbl">kWh Charged</div></div><div class="stat"><div class="stat-val">'+(ms?'$'+fmt(ms.avg):'$0.00')+'</div><div class="stat-lbl">Avg $/kWh</div></div><div class="stat glow-gn"><div class="stat-val" style="color:var(--gn)">'+(ms?fC(ms.savings):'$0.00')+'</div><div class="stat-lbl">Saved vs Gas</div></div></div>';
+  if(budget>0){var spent=ms?ms.tCost:0;var pct=Math.min(spent/budget*100,100);var over=spent>budget;var color=over?'var(--rd)':pct>80?'var(--am)':'var(--gn)';h+='<div class="card" style="margin-top:14px"><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px"><span style="color:var(--txd)">Monthly Budget</span><span style="font-weight:700;font-variant-numeric:tabular-nums;color:'+(over?'var(--rd)':'var(--tx)')+'">'+fC(spent)+' / '+fC(budget)+'</span></div><div class="progress-bar"><div class="progress-fill" style="width:'+fmt(pct,0)+'%;background:'+color+'"></div></div></div>'}
+  var recentAlerts=[];var cutoff=new Date(Date.now()-30*864e5).toISOString().split('T')[0];sessions.forEach(function(s){if(s.date>=cutoff)getAlerts(s).forEach(function(a){recentAlerts.push({t:a.t,m:a.m,sd:s.date,sp:s.provider})})});
+  if(recentAlerts.length){h+='<div class="card" style="margin-top:14px"><div class="card-title">\u26A0 Recent Alerts</div>';recentAlerts.slice(0,5).forEach(function(a){h+='<div class="alert-box '+(a.t==='warn'?'alert-warn':'alert-err')+'"><span style="flex-shrink:0">\u26A0</span><div><div style="font-weight:600;font-size:11px">'+escH(a.sd)+' \u2014 '+escH(a.sp)+'</div><div>'+escH(a.m)+'</div></div></div>'});h+='</div>'}
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:14px">';
+  var months=[];for(var i=5;i>=0;i--){var d=new Date(now.getFullYear(),now.getMonth()-i,1);var ymk=d.getFullYear()+'-'+pad2(d.getMonth()+1);var sm=getMonthSummary(ymk);months.push({l:d.toLocaleDateString('en',{month:'short'}),v:sm?sm.tCost:0})}
+  h+='<div class="card"><div class="card-title">Monthly Trend</div><div>'+makeAreaChart(months)+'</div></div>';
+  if(ms){var pd=[];Object.keys(ms.byP).forEach(function(n){pd.push({l:n,v:+ms.byP[n].cost.toFixed(2)})});h+='<div class="card"><div class="card-title">Cost by Provider</div><div>'+makePieChart(pd)+'</div></div>'}
+  h+='</div>';return h;
+}
+
+function buildSessions(){
+  var filtered=sessions.filter(function(s){if(filterProvider&&s.provider!==filterProvider)return false;if(filterLocation&&s.location!==filterLocation)return false;if(filterType&&s.chargerType!==filterType)return false;return true}).sort(function(a,b){return b.date.localeCompare(a.date)||((b.time||'').localeCompare(a.time||''))});
+  var h='<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">';
+  h+='<select class="inp sel" data-flt="provider" style="width:auto;min-width:120px"><option value="">All Providers</option>';PROVIDERS.forEach(function(p){h+='<option'+(filterProvider===p?' selected':'')+'>'+escH(p)+'</option>'});h+='</select>';
+  h+='<select class="inp sel" data-flt="location" style="width:auto;min-width:120px"><option value="">All Locations</option>';LOCATIONS.forEach(function(l){h+='<option'+(filterLocation===l?' selected':'')+'>'+escH(l)+'</option>'});h+='</select>';
+  h+='<select class="inp sel" data-flt="type" style="width:auto;min-width:120px"><option value="">All Types</option>';TYPES.forEach(function(t){h+='<option'+(filterType===t?' selected':'')+'>'+escH(t)+'</option>'});h+='</select>';
+  h+='<button class="btn btn-g" data-act="export">\u2B07 CSV</button></div>';
+  h+='<div class="card" style="padding:0;overflow:hidden"><div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Time</th><th>Location</th><th>Provider</th><th>Type</th><th>kWh</th><th>Batt Start</th><th>Charged %</th><th>Min</th><th>Cost</th><th>$/kWh</th><th>Idle</th><th></th></tr></thead><tbody>';
+  if(!filtered.length){h+='<tr><td colspan="13" class="empty">No sessions logged yet. Tap "+" to add one.</td></tr>'}
+  else{filtered.forEach(function(s){
+    var rate=s.kwh>0?s.cost/s.kwh:0;var b=BENCH[s.chargerType];var hi=rate>b.hi*1.2;
+    var locHtml=escH(s.location)+(s.siteName?' &middot; '+escH(s.siteName):'');
+    if(s.lat!=null&&s.lng!=null){locHtml+='<br><a class="map-link" href="'+gmapUrl(s.lat,s.lng)+'" target="_blank" rel="noopener">\uD83D\uDCCD Open in Maps ('+fmt(s.lat,4)+', '+fmt(s.lng,4)+')</a>'}
+    // Battery bar
+    var battHtml='\u2014';
+    if(s.battOrig!=null){
+      var endPct=Math.min(s.battOrig+(s.battPct||0),100);
+      battHtml='<div style="font-size:10px;color:var(--txd)">'+s.battOrig+'%</div><div class="batt-bar-bg" style="width:60px"><div class="batt-bar-fill" style="width:'+endPct+'%;background:linear-gradient(90deg,var(--am),var(--gn))"></div><div class="batt-bar-label">'+s.battOrig+'%\u2192'+endPct+'%</div></div>';
+    }
+    var pctHtml=s.battPct!=null?s.battPct+'%':'\u2014';
+    h+='<tr style="background:'+(hi?'rgba(248,113,113,.04)':'transparent')+'"><td>'+escH(s.date)+'</td><td style="color:var(--txd)">'+(s.time||'\u2014')+'</td><td style="font-variant-numeric:normal">'+locHtml+'</td><td style="font-variant-numeric:normal">'+escH(s.provider)+'</td><td><span class="badge '+(s.chargerType==='DC Fast'?'badge-am':'badge-ac')+'">'+(s.chargerType==='DC Fast'?'DCFC':'L2')+'</span></td><td>'+fmt(s.kwh,1)+'</td><td>'+battHtml+'</td><td>'+pctHtml+'</td><td>'+s.duration+'</td><td>'+fC(s.cost)+'</td><td style="color:'+(hi?'var(--rd)':'var(--gn)')+'">'+fmt(rate)+'</td><td>'+(s.idleFees>0?fC(s.idleFees):'\u2014')+'</td><td style="white-space:nowrap"><button class="icon-btn" data-act="edit" data-id="'+s.id+'">\u270E</button><button class="icon-btn del" data-act="delete" data-id="'+s.id+'">\u2715</button></td></tr>';
+  })}
+  h+='</tbody></table></div></div>';return h;
+}
+
+function buildAnalysis(){
+  var avail={};sessions.forEach(function(s){avail[getYM(s.date)]=true});var availArr=Object.keys(avail).sort().reverse();var ms=getMonthSummary(selectedMonth);
+  var h='<div style="margin-bottom:14px"><select class="inp sel" style="width:auto;min-width:180px" data-act="selmonth">';if(!availArr.length)h+='<option value="'+selectedMonth+'">'+selectedMonth+'</option>';availArr.forEach(function(m){h+='<option value="'+m+'"'+(selectedMonth===m?' selected':'')+'>'+new Date(m+'-01').toLocaleDateString('en',{month:'long',year:'numeric'})+'</option>'});h+='</select></div>';
+  if(!ms)return h+'<div class="card empty">No data for this month.</div>';
+  h+='<div class="stat-grid"><div class="stat glow-ac"><div class="stat-val" style="color:var(--ac)">'+fC(ms.tCost)+'</div><div class="stat-lbl">Total Cost</div></div><div class="stat"><div class="stat-val">'+fmt(ms.tKwh,1)+' kWh</div><div class="stat-lbl">Total Energy</div></div><div class="stat"><div class="stat-val">$'+fmt(ms.avg)+'</div><div class="stat-lbl">Avg Rate</div></div><div class="stat glow-gn"><div class="stat-val" style="color:var(--gn)">'+fC(ms.savings)+'</div><div class="stat-lbl">Gas Savings</div></div></div>';
+  // Battery stats
+  if(ms.battCnt>0){
+    h+='<div class="card" style="margin-top:14px"><div class="card-title">\uD83D\uDD0B Battery Statistics ('+batteryCap+' kWh capacity)</div><div class="stat-grid"><div class="stat"><div class="stat-val">'+fmt(ms.avgOrig,0)+'%</div><div class="stat-lbl">Avg Start Level</div></div><div class="stat"><div class="stat-val">'+fmt(ms.avgPct,0)+'%</div><div class="stat-lbl">Avg Charged %</div></div><div class="stat"><div class="stat-val">'+ms.battCnt+'</div><div class="stat-lbl">Sessions w/ Battery Data</div></div></div></div>';
+  }
+  // Type split
+  var fPct=ms.tCost>0?fmt(ms.fCost/ms.tCost*100,0):'0';var l2Pct=ms.tCost>0?fmt(ms.l2Cost/ms.tCost*100,0):'0';
+  h+='<div class="card" style="margin-top:14px"><div class="card-title">Charging Type Split</div><div class="split-row"><div><div style="font-size:11px;color:var(--txd);margin-bottom:4px">Level 2</div><div style="font-size:20px;font-weight:700;color:var(--ac);font-variant-numeric:tabular-nums">'+fC(ms.l2Cost)+'</div><div style="font-size:11px;color:var(--txm)">'+l2Pct+'% of total</div></div><div><div style="font-size:11px;color:var(--txd);margin-bottom:4px">DC Fast</div><div style="font-size:20px;font-weight:700;color:var(--am);font-variant-numeric:tabular-nums">'+fC(ms.fCost)+'</div><div style="font-size:11px;color:var(--txm)">'+fPct+'% of total</div></div></div></div>';
+  // Location
+  h+='<div class="card" style="margin-top:14px"><div class="card-title">Vancouver vs Richmond</div><div class="split-row">';Object.keys(ms.byL).forEach(function(loc){var d=ms.byL[loc];h+='<div class="loc-card"><h4>'+escH(loc)+'</h4><div style="font-size:11px;color:var(--txd)">'+d.n+' sessions &middot; '+fmt(d.kwh,1)+' kWh &middot; '+fC(d.cost)+'</div><div style="font-size:14px;font-weight:600;margin-top:4px;color:var(--ac);font-variant-numeric:tabular-nums">$'+fmt(d.kwh>0?d.cost/d.kwh:0)+'/kWh avg</div></div>'});h+='</div></div>';
+  // Provider ranking
+  var pRank=[];Object.keys(ms.byP).forEach(function(n){var d=ms.byP[n];pRank.push({n:n,cost:d.cost,kwh:d.kwh,rate:d.kwh>0?d.cost/d.kwh:0,cnt:d.n})});pRank.sort(function(a,b){return a.rate-b.rate});
+  h+='<div class="card" style="margin-top:14px"><div class="card-title">Provider Ranking (by $/kWh)</div>';pRank.forEach(function(p,i){h+='<div class="rank-item"><div class="rank-num'+(i===0?' top':'')+'">'+(i+1)+'</div><div style="flex:1"><div style="font-size:13px;font-weight:500">'+escH(p.n)+'</div><div style="font-size:11px;color:var(--txd)">'+p.cnt+' sessions &middot; '+fmt(p.kwh,1)+' kWh</div></div><div style="font-weight:700;font-variant-numeric:tabular-nums;color:'+(i===0?'var(--gn)':'var(--tx)')+'">$'+fmt(p.rate)+'/kWh</div></div>'});h+='</div>';
+  // Daily chart
+  var dayMap={};ms.sessions.forEach(function(s){if(!dayMap[s.date])dayMap[s.date]=0;dayMap[s.date]+=s.cost+s.idleFees});var days=Object.keys(dayMap).sort();
+  if(days.length>1){var dd=days.map(function(d){return{l:d.slice(8),v:dayMap[d]}});h+='<div class="card" style="margin-top:14px"><div class="card-title">Daily Breakdown</div><div>'+makeBarChart(dd)+'</div></div>'}
+  // Insights
+  var ins=[];if(pRank.length)ins.push({t:'gn',m:'Cheapest provider: '+pRank[0].n+' at $'+fmt(pRank[0].rate)+'/kWh'});var fPctN=ms.tCost>0?ms.fCost/ms.tCost*100:0;if(fPctN>60)ins.push({t:'am',m:fmt(fPctN,0)+'% of cost on DC Fast. Use Level 2 when time allows.'});var totIdle=0;ms.sessions.forEach(function(s){totIdle+=s.idleFees});if(totIdle>0)ins.push({t:'am',m:'$'+fmt(totIdle)+' in idle fees. Set phone timer to avoid.'});if(ms.savings>0)ins.push({t:'gn',m:'Saving '+fC(ms.savings)+' vs gas ('+fC(ms.eqGas)+').'});
+  if(ms.battCnt>0&&ms.avgOrig<20)ins.push({t:'am',m:'Average start level is '+fmt(ms.avgOrig,0)+'%. Consider charging before battery drops below 20%.'});
+  if(ins.length){h+='<div class="card" style="margin-top:14px"><div class="card-title">\u2139 Insights</div>';ins.forEach(function(item){h+='<div class="insight-row"><span class="badge '+(item.t==='gn'?'badge-gn':'badge-am')+'">'+(item.t==='gn'?'\u2713':'!')+'</span>'+escH(item.m)+'</div>'});h+='<div class="tips-box"><strong>Tips:</strong><br>&bull; Use Level 2 when time allows (saves ~20-30% vs DCFC)<br>&bull; Set timer alerts to avoid idle fees<br>&bull; BC Hydro L2 at $0.2972/kWh is competitive<br>&bull; Off-peak home charging ~$0.09/kWh</div></div>'}
+  // Gas comparison
+  var eqKm=(ms.tKwh/EV_KWH100)*100;
+  h+='<div class="card" style="margin-top:14px"><div class="card-title">\uD83D\uDE97 Gas Equivalent</div><div class="gas-grid"><div class="gas-card"><div style="font-size:10px;color:var(--txd)">EV Cost</div><div class="val" style="color:var(--gn)">'+fC(ms.tCost)+'</div></div><div class="gas-card"><div style="font-size:10px;color:var(--txd)">Gas Equivalent</div><div class="val" style="color:var(--rd)">'+fC(ms.eqGas)+'</div></div></div><div class="gas-note">Based on '+fmt(eqKm,0)+' km &middot; Gas $'+fmt(GAS_PER_L)+'/L &middot; '+GAS_L100+'L/100km</div></div>';
+  return h;
+}
+
+// ═══ FORM MODAL ═══
+var calYear,calMonth,formData,calOpen=false;
+
+function openFormModal(editSess){
+  var now=new Date();var ed=editSess||null;
+  formData={
+    date:ed?ed.date:getToday(),
+    timeHr:ed&&ed.time?ed.time.split(':')[0]||'12':'12',
+    timeMin:ed&&ed.time?(ed.time.split(':')[1]||'00').split(' ')[0]||'00':'00',
+    timeAP:ed&&ed.time?(ed.time.indexOf('PM')>=0?'PM':'AM'):(now.getHours()>=12?'PM':'AM'),
+    location:ed?ed.location:'Vancouver',
+    siteName:ed?ed.siteName||'':'',
+    provider:ed?ed.provider:'BC Hydro',
+    chargerType:ed?ed.chargerType:'Level 2',
+    kwh:ed?ed.kwh:'',duration:ed?ed.duration:'',cost:ed?ed.cost:'',idleFees:ed?ed.idleFees||0:0,
+    notes:ed?ed.notes||'':'',
+    lat:ed&&ed.lat!=null?ed.lat:'',lng:ed&&ed.lng!=null?ed.lng:'',
+    battOrig:ed&&ed.battOrig!=null?ed.battOrig:'',
+    battPct:ed&&ed.battPct!=null?ed.battPct:'',
+    locMode:ed&&ed.lat!=null&&ed.lng!=null?'coords':'manual',gpsStatus:'',editId:ed?ed.id:null
+  };
+  if(!ed){var h24=now.getHours();formData.timeHr=pad2(h24>12?h24-12:(h24===0?12:h24));formData.timeMin=pad2(Math.floor(now.getMinutes()/5)*5)}
+  var pd=formData.date.split('-');calYear=parseInt(pd[0]);calMonth=parseInt(pd[1])-1;
+  calOpen=false;
+  doRenderForm();
+}
+
+function doRenderForm(){
+  var d=formData;
+  var selDate=new Date(d.date+'T12:00:00');
+  var dateLabel=selDate.toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+  var h='<div class="modal-bg" id="form-overlay"><div class="modal" id="form-modal">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h2>'+(d.editId?'Edit Session':'Log Charging Session')+'</h2><button class="icon-btn" id="form-close" style="font-size:18px">\u2715</button></div>';
+
+  // ── DATE: collapsible calendar ──
+  h+='<div class="card-title" style="margin-bottom:8px">\uD83D\uDCC5 Date &amp; Time</div>';
+  h+='<div class="cal-toggle" id="cal-toggle-btn"><span class="sel-date">'+dateLabel+'</span><span class="arrow'+(calOpen?' open':'')+'">\u25BC</span></div>';
+  h+='<div class="cal-body'+(calOpen?'':' collapsed')+'" id="cal-body" style="max-height:'+(calOpen?'400px':'0')+'">';
+  h+='<div class="cal-header"><button class="btn-s" id="cal-today">Today</button><div style="display:flex;align-items:center;gap:6px"><div class="cal-nav"><button id="cal-prev">\u2039</button></div><div class="cal-title">'+MONTHS[calMonth]+' '+calYear+'</div><div class="cal-nav"><button id="cal-next">\u203A</button></div></div></div>';
+  h+='<div class="cal-grid">';DAYS.forEach(function(dw){h+='<div class="cal-dow">'+dw+'</div>'});
+  var firstDay=new Date(calYear,calMonth,1).getDay();var daysInMonth=new Date(calYear,calMonth+1,0).getDate();var prevDays=new Date(calYear,calMonth,0).getDate();var todayStr=getToday();
+  var sessionDates={};sessions.forEach(function(s){sessionDates[s.date]=true});
+  for(var i=firstDay-1;i>=0;i--)h+='<div class="cal-day other">'+(prevDays-i)+'</div>';
+  for(var day=1;day<=daysInMonth;day++){var ds=calYear+'-'+pad2(calMonth+1)+'-'+pad2(day);var cls='cal-day';if(ds===todayStr)cls+=' today';if(ds===d.date)cls+=' selected';if(sessionDates[ds])cls+=' has-session';h+='<div class="'+cls+'" data-calday="'+ds+'">'+day+'</div>'}
+  var totalCells=firstDay+daysInMonth;var rem=totalCells%7?7-totalCells%7:0;for(var j=1;j<=rem;j++)h+='<div class="cal-day other">'+j+'</div>';
+  h+='</div></div>';
+
+  // ── TIME: direct input ──
+  h+='<div style="margin-top:10px;margin-bottom:14px"><div class="time-row">';
+  h+='<input type="text" class="time-inp" id="f-thr" value="'+escH(d.timeHr)+'" maxlength="2" inputmode="numeric" placeholder="HH">';
+  h+='<span style="font-size:20px;font-weight:700;color:var(--txm)">:</span>';
+  h+='<input type="text" class="time-inp" id="f-tmn" value="'+escH(d.timeMin)+'" maxlength="2" inputmode="numeric" placeholder="MM">';
+  h+='<button class="ampm-btn'+(d.timeAP==='AM'?' active':'')+'" id="am-btn">AM</button>';
+  h+='<button class="ampm-btn'+(d.timeAP==='PM'?' active':'')+'" id="pm-btn">PM</button>';
+  h+='</div></div>';
+
+  // ── LOCATION ──
+  h+='<div class="card-title" style="margin-bottom:8px">\uD83D\uDCCD Location</div>';
+  h+='<div class="loc-tabs"><button class="btn-s'+(d.locMode==='manual'?' active':'')+'" data-locmode="manual">Manual</button><button class="btn-s'+(d.locMode==='gps'?' active':'')+'" data-locmode="gps">GPS</button><button class="btn-s'+(d.locMode==='coords'?' active':'')+'" data-locmode="coords">Coordinates</button></div>';
+  if(d.locMode==='gps'){
+    h+='<button class="gps-btn'+(d.gpsStatus==='loading'?' loading':'')+'" id="gps-fetch"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>'+(d.gpsStatus==='loading'?'Fetching...':'Get Current Location')+'</button>';
+    if(d.gpsStatus==='ok')h+='<div class="loc-status ok">\u2713 Location acquired: '+fmt(d.lat,5)+', '+fmt(d.lng,5)+'</div>';
+    if(d.gpsStatus==='err')h+='<div class="loc-status err">\u2717 GPS unavailable</div>';
+  }
+  if(d.locMode==='coords'){h+='<div class="coord-grid"><div><label class="lbl">Latitude</label><input type="number" step="any" class="inp" id="f-lat" placeholder="49.2827" value="'+(d.lat||'')+'"></div><div><label class="lbl">Longitude</label><input type="number" step="any" class="inp" id="f-lng" placeholder="-123.1207" value="'+(d.lng||'')+'"></div></div>'}
+  h+='<div class="fgrid" style="margin-top:8px"><div><label class="lbl">City *</label><select class="inp sel" id="f-loc">';LOCATIONS.forEach(function(l){h+='<option'+(d.location===l?' selected':'')+'>'+l+'</option>'});h+='</select></div><div><label class="lbl">Site Name</label><input class="inp" id="f-site" placeholder="e.g., Metrotown P3" value="'+escH(d.siteName)+'"></div></div>';
+
+  // ── CHARGING DETAILS ──
+  h+='<div class="card-title" style="margin-top:14px;margin-bottom:8px">\u26A1 Charging Details</div><div class="fgrid">';
+  h+='<div><label class="lbl">Provider *</label><select class="inp sel" id="f-prov">';PROVIDERS.forEach(function(p){h+='<option'+(d.provider===p?' selected':'')+'>'+escH(p)+'</option>'});h+='</select></div>';
+  h+='<div><label class="lbl">Charger Type *</label><select class="inp sel" id="f-type">';TYPES.forEach(function(t2){h+='<option'+(d.chargerType===t2?' selected':'')+'>'+escH(t2)+'</option>'});h+='</select></div>';
+  h+='<div><label class="lbl">Energy (kWh) *</label><input type="number" step="0.1" class="inp" id="f-kwh" placeholder="0.0" value="'+d.kwh+'"></div>';
+  h+='<div><label class="lbl">Original Battery Level %</label><input type="number" step="1" min="0" max="100" class="inp" id="f-battorig" placeholder="e.g., 20" value="'+(d.battOrig!==''?d.battOrig:'')+'"></div>';
+  h+='<div><label class="lbl">% Charged Required</label><input type="number" step="1" min="0" max="100" class="inp" id="f-battpct" placeholder="e.g., 60" value="'+(d.battPct!==''?d.battPct:'')+'"></div>';
+  h+='<div><label class="lbl">Duration (min) *</label><input type="number" class="inp" id="f-dur" placeholder="0" value="'+d.duration+'"></div>';
+  h+='<div><label class="lbl">Cost ($) *</label><input type="number" step="0.01" class="inp" id="f-cost" placeholder="0.00" value="'+d.cost+'"></div>';
+  h+='<div><label class="lbl">Idle Fees ($)</label><input type="number" step="0.01" class="inp" id="f-idle" placeholder="0.00" value="'+d.idleFees+'"></div>';
+  h+='<div class="full"><label class="lbl">Notes</label><input class="inp" id="f-notes" placeholder="Optional notes..." value="'+escH(d.notes)+'"></div>';
+  h+='</div><div id="rate-preview"></div>';
+  h+='<div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end"><button class="btn btn-g" id="form-cancel">Cancel</button><button class="btn btn-p" id="form-save">\u2713 '+(d.editId?'Update':'Save Session')+'</button></div>';
+  h+='</div></div>';
+
+  var existing=document.getElementById('modal-root');if(existing)existing.remove();
+  var container=document.createElement('div');container.id='modal-root';container.innerHTML=h;document.body.appendChild(container);
+  attachFormEvts();
+  updPreview();
+}
+
+function syncForm(){
+  var g=function(id){var el=document.getElementById(id);return el?el.value:null};
+  var v;
+  v=g('f-thr');if(v!==null)formData.timeHr=v;
+  v=g('f-tmn');if(v!==null)formData.timeMin=v;
+  v=g('f-loc');if(v!==null)formData.location=v;
+  v=g('f-site');if(v!==null)formData.siteName=v;
+  v=g('f-prov');if(v!==null)formData.provider=v;
+  v=g('f-type');if(v!==null)formData.chargerType=v;
+  v=g('f-kwh');if(v!==null)formData.kwh=v;
+  v=g('f-dur');if(v!==null)formData.duration=v;
+  v=g('f-cost');if(v!==null)formData.cost=v;
+  v=g('f-idle');if(v!==null)formData.idleFees=v;
+  v=g('f-notes');if(v!==null)formData.notes=v;
+  v=g('f-lat');if(v!==null)formData.lat=v;
+  v=g('f-lng');if(v!==null)formData.lng=v;
+  v=g('f-battorig');if(v!==null)formData.battOrig=v;
+  v=g('f-battpct');if(v!==null)formData.battPct=v;
+}
+
+function attachFormEvts(){
+  var overlay=document.getElementById('form-overlay');
+  var modal=document.getElementById('form-modal');
+  overlay.addEventListener('mousedown',function(e){if(e.target===overlay)closeFormModal()});
+  document.getElementById('form-close').addEventListener('click',closeFormModal);
+  document.getElementById('form-cancel').addEventListener('click',closeFormModal);
+  document.getElementById('form-save').addEventListener('click',handleFormSave);
+  // Calendar toggle
+  document.getElementById('cal-toggle-btn').addEventListener('click',function(){calOpen=!calOpen;syncForm();doRenderForm()});
+  // Calendar nav (only if open)
+  var cp=document.getElementById('cal-prev');var cn=document.getElementById('cal-next');var ct=document.getElementById('cal-today');
+  if(cp)cp.addEventListener('click',function(e){e.stopPropagation();calMonth--;if(calMonth<0){calMonth=11;calYear--}syncForm();doRenderForm()});
+  if(cn)cn.addEventListener('click',function(e){e.stopPropagation();calMonth++;if(calMonth>11){calMonth=0;calYear++}syncForm();doRenderForm()});
+  if(ct)ct.addEventListener('click',function(e){e.stopPropagation();var now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();formData.date=getToday();syncForm();doRenderForm()});
+  // Day clicks
+  document.querySelectorAll('[data-calday]').forEach(function(el){el.addEventListener('click',function(e){e.stopPropagation();formData.date=this.getAttribute('data-calday');syncForm();calOpen=false;doRenderForm()})});
+  // AM/PM
+  document.getElementById('am-btn').addEventListener('click',function(){formData.timeAP='AM';syncForm();doRenderForm()});
+  document.getElementById('pm-btn').addEventListener('click',function(){formData.timeAP='PM';syncForm();doRenderForm()});
+  // Location mode
+  document.querySelectorAll('[data-locmode]').forEach(function(el){el.addEventListener('click',function(){formData.locMode=this.getAttribute('data-locmode');syncForm();doRenderForm()})});
+  // GPS
+  var gps=document.getElementById('gps-fetch');
+  if(gps)gps.addEventListener('click',function(){
+    if(!navigator.geolocation){formData.gpsStatus='err';syncForm();doRenderForm();return}
+    formData.gpsStatus='loading';syncForm();doRenderForm();
+    navigator.geolocation.getCurrentPosition(function(pos){formData.lat=pos.coords.latitude;formData.lng=pos.coords.longitude;formData.gpsStatus='ok';if(pos.coords.latitude<49.19)formData.location='Richmond';else formData.location='Vancouver';syncForm();doRenderForm()},function(){formData.gpsStatus='err';syncForm();doRenderForm()},{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
+  });
+  // Rate preview
+  ['f-kwh','f-cost','f-type'].forEach(function(id){var el=document.getElementById(id);if(el){el.addEventListener('input',updPreview);el.addEventListener('change',updPreview)}});
+}
+
+function updPreview(){
+  var kwh=parseFloat((document.getElementById('f-kwh')||{}).value);
+  var cost=parseFloat((document.getElementById('f-cost')||{}).value);
+  var type=(document.getElementById('f-type')||{}).value||'Level 2';
+  var el=document.getElementById('rate-preview');if(!el)return;
+  if(kwh>0&&cost>0){var rate=cost/kwh;var b=BENCH[type];var badge,cls;if(rate>b.hi*1.2){badge='Above expected';cls='badge-rd'}else if(rate<=b.lo){badge='Great rate';cls='badge-gn'}else{badge='Normal';cls='badge-ac'}el.innerHTML='<div class="rate-preview"><span style="color:var(--txd)">Rate:</span> <span style="font-weight:700;color:var(--ac)">$'+fmt(rate)+'/kWh</span> <span class="badge '+cls+'">'+badge+'</span></div>'}else{el.innerHTML=''}
+}
+
+function closeFormModal(){var r=document.getElementById('modal-root');if(r)r.remove();formData=null}
+
+function handleFormSave(){
+  syncForm();var d=formData;var hasErr=false;var g=function(id){return document.getElementById(id)};
+  ['f-kwh','f-cost','f-dur'].forEach(function(id){var el=g(id);if(el)el.classList.remove('err')});
+  var kwh=parseFloat(d.kwh);var cost=parseFloat(d.cost);var dur=parseInt(d.duration);
+  if(!d.date)hasErr=true;
+  if(isNaN(kwh)||kwh<=0){var el=g('f-kwh');if(el)el.classList.add('err');hasErr=true}
+  if(isNaN(cost)||cost<0){var el2=g('f-cost');if(el2)el2.classList.add('err');hasErr=true}
+  if(isNaN(dur)||dur<=0){var el3=g('f-dur');if(el3)el3.classList.add('err');hasErr=true}
+  if(hasErr)return;
+  var hr=d.timeHr||'12';var mn=d.timeMin||'00';
+  var timeStr=pad2(parseInt(hr))+':'+pad2(parseInt(mn))+' '+d.timeAP;
+  var sess={
+    id:d.editId||uid(),date:d.date,time:timeStr,location:d.location,siteName:d.siteName,
+    provider:d.provider,chargerType:d.chargerType,kwh:kwh,duration:dur,cost:cost,
+    idleFees:parseFloat(d.idleFees)||0,notes:d.notes,
+    lat:d.lat!==''&&d.lat!=null&&!isNaN(parseFloat(d.lat))?parseFloat(d.lat):null,
+    lng:d.lng!==''&&d.lng!=null&&!isNaN(parseFloat(d.lng))?parseFloat(d.lng):null,
+    battOrig:d.battOrig!==''?parseInt(d.battOrig):null,
+    battPct:d.battPct!==''?parseInt(d.battPct):null
+  };
+  if(d.editId){sessions=sessions.map(function(s){return s.id===sess.id?sess:s})}else{sessions.push(sess)}
+  saveData();closeFormModal();render();
+}
+
+// ═══ BATTERY CAPACITY MODAL ═══
+function openBatteryModal(){
+  var h='<div class="modal-bg" id="batt-overlay"><div class="modal" style="max-width:380px" id="batt-modal"><h2 style="font-size:15px;margin-bottom:12px">\uD83D\uDD0B EV Battery Capacity</h2><label class="lbl">Battery Capacity (kWh)</label><input type="number" step="1" class="inp" id="batt-val" value="'+batteryCap+'" placeholder="e.g., 60"><div style="font-size:11px;color:var(--txd);margin-top:6px">Common: Tesla Model 3 (60-82), Leaf (40-62), ID.4 (77), Ioniq 5 (77), Kona (64)</div><div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end"><button class="btn btn-g" id="batt-cancel">Cancel</button><button class="btn btn-p" id="batt-save">Save</button></div></div></div>';
+  var c=document.createElement('div');c.id='batt-root';c.innerHTML=h;document.body.appendChild(c);
+  document.getElementById('batt-overlay').addEventListener('mousedown',function(e){if(e.target===this)closeBattM()});
+  document.getElementById('batt-modal').addEventListener('mousedown',function(e){e.stopPropagation()});
+  document.getElementById('batt-cancel').addEventListener('click',closeBattM);
+  document.getElementById('batt-save').addEventListener('click',function(){batteryCap=parseFloat(document.getElementById('batt-val').value)||60;saveData();closeBattM();render()});
+}
+function closeBattM(){var r=document.getElementById('batt-root');if(r)r.remove()}
+
+// ═══ BUDGET MODAL (FIXED) ═══
+function openBudgetModal(){
+  var h='<div class="modal-bg" id="budget-overlay"><div class="modal" style="max-width:380px" id="budget-modal"><h2 style="font-size:15px;margin-bottom:12px">\u2295 Monthly Budget</h2><label class="lbl">Budget Amount ($)</label><input type="number" step="1" class="inp" id="b-val" value="'+(budget||'')+'" placeholder="e.g., 100"><div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end"><button class="btn btn-g" id="budget-cancel">Cancel</button><button class="btn btn-p" id="budget-save">Save</button></div></div></div>';
+  var c=document.createElement('div');c.id='budget-root';c.innerHTML=h;document.body.appendChild(c);
+  document.getElementById('budget-overlay').addEventListener('mousedown',function(e){if(e.target===this)closeBudgetM()});
+  document.getElementById('budget-modal').addEventListener('mousedown',function(e){e.stopPropagation()});
+  document.getElementById('budget-cancel').addEventListener('click',closeBudgetM);
+  document.getElementById('budget-save').addEventListener('click',function(){budget=parseFloat(document.getElementById('b-val').value)||0;saveData();closeBudgetM();render()});
+}
+function closeBudgetM(){var r=document.getElementById('budget-root');if(r)r.remove()}
+
+// CSV Export
+function exportCSV(){
+  var hdr='Date,Time,Location,Site,Lat,Lng,Provider,Type,kWh,BatteryStart%,Charged%,Duration,Cost,IdleFees,Notes';
+  var sorted=sessions.slice().sort(function(a,b){return a.date.localeCompare(b.date)});
+  var rows=sorted.map(function(s){return s.date+','+(s.time||'')+','+s.location+',"'+(s.siteName||'')+'",'+(s.lat||'')+','+(s.lng||'')+','+s.provider+','+s.chargerType+','+s.kwh+','+(s.battOrig!=null?s.battOrig:'')+','+(s.battPct!=null?s.battPct:'')+','+s.duration+','+s.cost+','+s.idleFees+',"'+(s.notes||'')+'"'});
+  var csv=[hdr].concat(rows).join('\n');var blob=new Blob([csv],{type:'text/csv'});var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download='ev-charging-'+getToday()+'.csv';a.click();URL.revokeObjectURL(url);
+}
+
+function loadSample(){
+  sessions=[
+    {id:uid(),date:'2026-04-01',time:'09:30 AM',location:'Vancouver',siteName:'Metrotown P3',provider:'BC Hydro',chargerType:'Level 2',kwh:24.5,duration:120,cost:7.28,idleFees:0,notes:'',lat:49.2276,lng:-123.0038,battOrig:15,battPct:50},
+    {id:uid(),date:'2026-04-02',time:'02:15 PM',location:'Richmond',siteName:'Aberdeen Centre',provider:'Flo',chargerType:'DC Fast',kwh:35.2,duration:28,cost:14.08,idleFees:0,notes:'',lat:49.1835,lng:-123.1364,battOrig:10,battPct:65},
+    {id:uid(),date:'2026-04-04',time:'11:00 AM',location:'Vancouver',siteName:'Science World',provider:'ChargePoint',chargerType:'Level 2',kwh:18.3,duration:90,cost:5.49,idleFees:1.50,notes:'Idle fee',lat:49.2736,lng:-123.1036,battOrig:30,battPct:35},
+    {id:uid(),date:'2026-04-05',time:'04:45 PM',location:'Richmond',siteName:'Lansdowne',provider:'BC Hydro',chargerType:'DC Fast',kwh:42.0,duration:32,cost:15.16,idleFees:0,notes:'',lat:49.1710,lng:-123.1365,battOrig:8,battPct:72},
+    {id:uid(),date:'2026-04-07',time:'08:00 AM',location:'Vancouver',siteName:'Broadway & Cambie',provider:'Flo',chargerType:'Level 2',kwh:22.0,duration:105,cost:6.16,idleFees:0,notes:'',lat:49.2633,lng:-123.1152,battOrig:25,battPct:45},
+    {id:uid(),date:'2026-04-08',time:'01:30 PM',location:'Vancouver',siteName:'Main St',provider:'Tesla Supercharger',chargerType:'DC Fast',kwh:50.1,duration:25,cost:22.55,idleFees:2.00,notes:'Expensive',lat:49.2730,lng:-123.1006,battOrig:5,battPct:80},
+    {id:uid(),date:'2026-03-10',time:'10:00 AM',location:'Vancouver',siteName:'UBC',provider:'BC Hydro',chargerType:'Level 2',kwh:28.0,duration:140,cost:8.32,idleFees:0,notes:'',lat:49.2606,lng:-123.2460,battOrig:20,battPct:55},
+    {id:uid(),date:'2026-03-15',time:'03:00 PM',location:'Richmond',siteName:'Costco',provider:'Electrify Canada',chargerType:'DC Fast',kwh:45.0,duration:30,cost:18.00,idleFees:0,notes:'',lat:49.1780,lng:-123.0770,battOrig:12,battPct:70},
+    {id:uid(),date:'2026-03-22',time:'12:00 PM',location:'Vancouver',siteName:'Granville Island',provider:'Flo',chargerType:'Level 2',kwh:15.5,duration:75,cost:4.65,idleFees:0,notes:'',lat:49.2712,lng:-123.1341,battOrig:40,battPct:30},
+    {id:uid(),date:'2026-03-28',time:'05:30 PM',location:'Richmond',siteName:'Steveston',provider:'ChargePoint',chargerType:'Level 2',kwh:20.0,duration:95,cost:5.80,idleFees:0,notes:'',lat:49.1244,lng:-123.1869,battOrig:22,battPct:40}
+  ];saveData();
+}
+
+// Event Binding
+function attachEvents(){
+  document.getElementById('app').addEventListener('click',function(e){
+    if(e.target.closest('a'))return;
+    var btn=e.target.closest('[data-act]');
+    if(btn){var act=btn.getAttribute('data-act');
+      if(act==='add')openFormModal(null);
+      else if(act==='budget')openBudgetModal();
+      else if(act==='battery')openBatteryModal();
+      else if(act==='sample'){loadSample();render()}
+      else if(act==='export')exportCSV();
+      else if(act==='edit'){var s=sessions.find(function(x){return x.id===btn.getAttribute('data-id')});if(s)openFormModal(JSON.parse(JSON.stringify(s)))}
+      else if(act==='delete'){if(confirm('Delete this session?')){sessions=sessions.filter(function(x){return x.id!==btn.getAttribute('data-id')});saveData();render()}}
+      return}
+    var tabBtn=e.target.closest('[data-tab]');
+    if(tabBtn){currentTab=tabBtn.getAttribute('data-tab');render()}
+  });
+  document.querySelectorAll('[data-flt]').forEach(function(sel){sel.addEventListener('change',function(){var key=this.getAttribute('data-flt');if(key==='provider')filterProvider=this.value;else if(key==='location')filterLocation=this.value;else if(key==='type')filterType=this.value;render()})});
+  var msel=document.querySelector('[data-act="selmonth"]');if(msel)msel.addEventListener('change',function(){selectedMonth=this.value;render()});
+}
+
+loadData();render();
+})();
+</script>
+</body>
+</html>
