@@ -320,10 +320,21 @@ function doRenderForm(){
   var h='<div class="modal-bg" id="form-overlay"><div class="modal" id="form-modal">';
   h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h2>'+(d.editId?'Edit Session':'Log Charging Session')+'</h2><button class="icon-btn" id="form-close" style="font-size:18px">\u2715</button></div>';
 
-  // ── DATE: collapsible calendar ──
+  // ── DATE & TIME section ──
   h+='<div class="card-title" style="margin-bottom:8px">\uD83D\uDCC5 Date &amp; Time</div>';
+
+  // ── TIME: direct input (placed above calendar) ──
+  h+='<div style="margin-bottom:10px"><div class="time-row">';
+  h+='<input type="text" class="time-inp" id="f-thr" value="'+escH(d.timeHr)+'" maxlength="2" inputmode="numeric" placeholder="HH">';
+  h+='<span style="font-size:20px;font-weight:700;color:var(--txm)">:</span>';
+  h+='<input type="text" class="time-inp" id="f-tmn" value="'+escH(d.timeMin)+'" maxlength="2" inputmode="numeric" placeholder="MM">';
+  h+='<button class="ampm-btn'+(d.timeAP==='AM'?' active':'')+'" id="am-btn">AM</button>';
+  h+='<button class="ampm-btn'+(d.timeAP==='PM'?' active':'')+'" id="pm-btn">PM</button>';
+  h+='</div></div>';
+
+  // ── DATE: collapsible calendar ──
   h+='<div class="cal-toggle" id="cal-toggle-btn"><span class="sel-date">'+dateLabel+'</span><span class="arrow'+(calOpen?' open':'')+'">\u25BC</span></div>';
-  h+='<div class="cal-body'+(calOpen?'':' collapsed')+'" id="cal-body" style="max-height:'+(calOpen?'400px':'0')+'">';
+  h+='<div class="cal-body'+(calOpen?'':' collapsed')+'" id="cal-body" style="max-height:'+(calOpen?'500px':'0')+'">';
   h+='<div class="cal-header"><button class="btn-s" id="cal-today">Today</button><div style="display:flex;align-items:center;gap:6px"><div class="cal-nav"><button id="cal-prev">\u2039</button></div><div class="cal-title">'+MONTHS[calMonth]+' '+calYear+'</div><div class="cal-nav"><button id="cal-next">\u203A</button></div></div></div>';
   h+='<div class="cal-grid">';DAYS.forEach(function(dw){h+='<div class="cal-dow">'+dw+'</div>'});
   var firstDay=new Date(calYear,calMonth,1).getDay();var daysInMonth=new Date(calYear,calMonth+1,0).getDate();var prevDays=new Date(calYear,calMonth,0).getDate();var todayStr=getToday();
@@ -331,16 +342,7 @@ function doRenderForm(){
   for(var i=firstDay-1;i>=0;i--)h+='<div class="cal-day other">'+(prevDays-i)+'</div>';
   for(var day=1;day<=daysInMonth;day++){var ds=calYear+'-'+pad2(calMonth+1)+'-'+pad2(day);var cls='cal-day';if(ds===todayStr)cls+=' today';if(ds===d.date)cls+=' selected';if(sessionDates[ds])cls+=' has-session';h+='<div class="'+cls+'" data-calday="'+ds+'">'+day+'</div>'}
   var totalCells=firstDay+daysInMonth;var rem=totalCells%7?7-totalCells%7:0;for(var j=1;j<=rem;j++)h+='<div class="cal-day other">'+j+'</div>';
-  h+='</div></div>';
-
-  // ── TIME: direct input ──
-  h+='<div style="margin-top:10px;margin-bottom:14px"><div class="time-row">';
-  h+='<input type="text" class="time-inp" id="f-thr" value="'+escH(d.timeHr)+'" maxlength="2" inputmode="numeric" placeholder="HH">';
-  h+='<span style="font-size:20px;font-weight:700;color:var(--txm)">:</span>';
-  h+='<input type="text" class="time-inp" id="f-tmn" value="'+escH(d.timeMin)+'" maxlength="2" inputmode="numeric" placeholder="MM">';
-  h+='<button class="ampm-btn'+(d.timeAP==='AM'?' active':'')+'" id="am-btn">AM</button>';
-  h+='<button class="ampm-btn'+(d.timeAP==='PM'?' active':'')+'" id="pm-btn">PM</button>';
-  h+='</div></div>';
+  h+='</div><div style="height:8px"></div></div>';
 
   // ── LOCATION ──
   h+='<div class="card-title" style="margin-bottom:8px">\uD83D\uDCCD Location</div>';
