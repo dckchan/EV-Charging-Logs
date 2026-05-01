@@ -257,8 +257,32 @@ function buildSessions(){
 }
 
 function buildAnalysis(){
-  var avail={};sessions.forEach(function(s){avail[getYM(s.date)]=true});var availArr=Object.keys(avail).sort().reverse();var ms=getMonthSummary(selectedMonth);
-  var h='<div style="margin-bottom:14px"><select class="inp sel" style="width:auto;min-width:180px" data-act="selmonth">';if(!availArr.length)h+='<option value="'+selectedMonth+'">'+selectedMonth+'</option>';availArr.forEach(function(m){h+='<option value="'+m+'"'+(selectedMonth===m?' selected':'')+'>'+new Date(m+'-01').toLocaleDateString('en',{month:'long',year:'numeric'})+'</option>'});h+='</select></div>';
+  // Build full month list from earliest session (or 12 months ago) to current month
+  var now=new Date();var curYM=now.getFullYear()+'-'+pad2(now.getMonth()+1);
+  var earliest=curYM;
+  sessions.forEach(function(s){var ym=getYM(s.date);if(ym<earliest)earliest=ym});
+  // Go back at least 12 months from now
+  var back12=new Date(now.getFullYear(),now.getMonth()-11,1);
+  var back12YM=back12.getFullYear()+'-'+pad2(back12.getMonth()+1);
+  if(back12YM<earliest)earliest=back12YM;
+  // Generate all months from earliest to current
+  var allMonths=[];
+  var ep=earliest.split('-');var sy=parseInt(ep[0]),sm=parseInt(ep[1])-1;
+  var cp=curYM.split('-');var ey=parseInt(cp[0]),em=parseInt(cp[1])-1;
+  var y=ey,m=em;
+  while(y>sy||(y===sy&&m>=sm)){allMonths.push(y+'-'+pad2(m+1));m--;if(m<0){m=11;y--}}
+  // Ensure selectedMonth is in list
+  if(allMonths.indexOf(selectedMonth)<0)allMonths.unshift(selectedMonth);
+  // Mark which months have data
+  var dataMonths={};sessions.forEach(function(s){dataMonths[getYM(s.date)]=true});
+  var ms=getMonthSummary(selectedMonth);
+  var h='<div style="margin-bottom:14px"><select class="inp sel" style="width:auto;min-width:220px" data-act="selmonth">';
+  allMonths.forEach(function(ym){
+    var parts=ym.split('-');var label=new Date(parseInt(parts[0]),parseInt(parts[1])-1,1).toLocaleDateString('en',{month:'long',year:'numeric'});
+    var hasData=dataMonths[ym];
+    h+='<option value="'+ym+'"'+(selectedMonth===ym?' selected':'')+'>'+label+(hasData?' \u2022':'')+'</option>';
+  });
+  h+='</select></div>';
   if(!ms)return h+'<div class="card empty">No data for this month.</div>';
   h+='<div class="stat-grid"><div class="stat glow-ac"><div class="stat-val" style="color:var(--ac)">'+fC(ms.tCost)+'</div><div class="stat-lbl">Total Cost</div></div><div class="stat"><div class="stat-val">'+fmt(ms.tKwh,1)+' kWh</div><div class="stat-lbl">Total Energy</div></div><div class="stat"><div class="stat-val">$'+fmt(ms.avg)+'</div><div class="stat-lbl">Avg Rate</div></div><div class="stat glow-gn"><div class="stat-val" style="color:var(--gn)">'+fC(ms.savings)+'</div><div class="stat-lbl">Gas Savings</div></div></div>';
   // Battery stats
